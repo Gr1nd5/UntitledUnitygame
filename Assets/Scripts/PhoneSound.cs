@@ -1,9 +1,11 @@
 using UnityEngine;
+using System.Collections;
 
 public class PhoneSound : MonoBehaviour
 {
-    public AudioClip pickUpSound; // Sound clip for picking up the phone
-    public AudioClip putDownSound; // Sound clip for putting down the phone
+    public AudioClip pickUpSound;
+    public AudioClip putDownSound;
+    public float ringDelay = 5f; // Delay before the phone starts ringing again
 
     private AudioSource interactionAudioSource;
     private bool isPickedUp = false;
@@ -11,25 +13,20 @@ public class PhoneSound : MonoBehaviour
 
     void Start()
     {
-        // Get the AudioSource component or add one if not present
         interactionAudioSource = gameObject.AddComponent<AudioSource>();
-
-        // Get the PhoneRinging component
         phoneRinging = GetComponent<PhoneRinging>();
+        Debug.Log("PhoneSound: Start - AudioSource and PhoneRinging component set.");
     }
 
     public void PickUpPhone()
     {
         if (!isPickedUp)
         {
-            // Stop the ringing sound
+            StopAllCoroutines(); // Stop any existing coroutine to avoid multiple coroutines running
             phoneRinging.StopRinging();
-
-            // Play the pick up sound
             interactionAudioSource.PlayOneShot(pickUpSound);
-
-            // Set the phone as picked up
             isPickedUp = true;
+            Debug.Log("PhoneSound: Phone picked up.");
         }
     }
 
@@ -37,11 +34,17 @@ public class PhoneSound : MonoBehaviour
     {
         if (isPickedUp)
         {
-            // Play the put down sound
             interactionAudioSource.PlayOneShot(putDownSound);
-
-            // Set the phone as put down
+            StartCoroutine(StartRingingAfterDelay());
             isPickedUp = false;
+            Debug.Log("PhoneSound: Phone put down.");
         }
+    }
+
+    private IEnumerator StartRingingAfterDelay()
+    {
+        yield return new WaitForSeconds(ringDelay);
+        phoneRinging.StartRinging();
+        Debug.Log("PhoneSound: Ringing started after delay.");
     }
 }
